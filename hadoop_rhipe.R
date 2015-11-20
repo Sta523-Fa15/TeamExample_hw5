@@ -117,7 +117,6 @@ user_reduce = expression(
 )
 
 user_map = expression({
-  #library(RJSONIO)
   suppressMessages(library(jsonlite))
   
   lapply(
@@ -135,7 +134,7 @@ user_map = expression({
 user = rhwatch(
   map      = user_map,
   reduce   = user_reduce,
-  input    = rhfmt("/data/short_1e6.json", type = "text")
+  input    = rhfmt("/data/short_1e3.json", type = "text")
 )
 
 
