@@ -117,7 +117,8 @@ user_reduce = expression(
 )
 
 user_map = expression({
-  library(RJSONIO)
+  #library(RJSONIO)
+  suppressMessages(library(jsonlite))
   
   lapply(
     seq_along(map.keys), 
