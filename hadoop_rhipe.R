@@ -17,8 +17,8 @@ library(Rhipe)
 rhinit()
 
 ## Uncomment following lines if you need non-base packages
-#rhoptions(zips = '/R/R.Pkg.tar.gz')
-#rhoptions(runner = 'sh ./R.Pkg/library/Rhipe/bin/RhipeMapReduce.sh')
+rhoptions(zips = '/R/R.Pkg.tar.gz')
+rhoptions(runner = 'sh ./R.Pkg/library/Rhipe/bin/RhipeMapReduce.sh')
 
 
 
@@ -65,3 +65,79 @@ wc = rhwatch(
 get_val = function(x,i) x[[i]]
 
 counts = data.frame(key = sapply(wc,get_val,i=1),value = sapply(wc,get_val,i=2), stringsAsFactors=FALSE)
+
+
+
+## Line counting example
+
+lc_reduce = expression(
+  pre = {
+    total = 0
+  },
+  reduce = {
+    total = total + sum(unlist(reduce.values))
+  },
+  post = {
+    rhcollect(reduce.key, total)
+  }
+)
+
+lc_map = expression({
+  lapply(
+    seq_along(map.keys), 
+    function(r) 
+    {
+      rhcollect("line",1)
+    }
+  )
+})
+
+
+lc = rhwatch(
+  map      = lc_map,
+  reduce   = lc_reduce,
+  #input    = rhfmt("/data/Shakespeare/hamlet.txt", type = "text")
+  input    = rhfmt("/data/RC_2015-01.json", type = "text")
+)
+
+
+## User Comment Example
+
+
+user_reduce = expression(
+  pre = {
+    total = 0
+  },
+  reduce = {
+    total = total + sum(unlist(reduce.values))
+  },
+  post = {
+    rhcollect(reduce.key, total)
+  }
+)
+
+user_map = expression({
+  library(RJSONIO)
+  
+  lapply(
+    seq_along(map.keys), 
+    function(r) 
+    {
+      key = fromJSON(map.values[[r]])$author
+      value = 1
+      rhcollect(key,value)
+    }
+  )
+})
+
+
+user = rhwatch(
+  map      = user_map,
+  reduce   = user_reduce,
+  input    = rhfmt("/data/short_1e6.json", type = "text")
+)
+
+
+get_val = function(x,i) x[[i]]
+
+counts = data.frame(key = sapply(user,get_val,i=1),value = sapply(user,get_val,i=2), stringsAsFactors=FALSE)
